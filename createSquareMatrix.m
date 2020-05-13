@@ -1,6 +1,7 @@
-function [ detector_matrix ] = createSquareMatrix( c1, c2, ~, c4, nm, plot3D)
-% Creates square mesh, and transforms it to computing mesh in a surface of
-% sphere having Euclidean unit distance to origo. Computing mesh can be
+function [ cartesian_matrix, theta_matrix, phi_matrix ] = createSquareMatrix( c1, c2, ~, c4, nm, plot3D)
+% Creates square computing mesh in cartesian coordinate system, and
+% determines computing mesh points in cartesian and spherical coordinate
+% system covering the object area. Computing mesh can be
 % utilized e.g. with geographical or optical simulations
 % 
 % c1, c2 .. define four (3) corners in 3D space [x y z] in rotational order
@@ -10,10 +11,10 @@ function [ detector_matrix ] = createSquareMatrix( c1, c2, ~, c4, nm, plot3D)
 % Antti Järvinen 11.5.2020
 
 % An example:
-% [ detector_matrix ] = createSquareMatrix( [2 2 -2], [2 2 2], [2 -2 2], [2 -2 -2], [10 10], 1)
+% [ cartesian_matrix, theta_matrix, phi_matrix ] = createSquareMatrix( [2 2 -2], [2 2 2], [2 -2 2], [2 -2 -2], [10 10], 1)
 
 
-% Discrete detector matrix points (n number) in 3D space
+% Discrete detector matrix points (n number) in cartesian coordinate system
 x = zeros(1,nm(1)*nm(2));
 y = zeros(1,nm(1)*nm(2));
 z = zeros(1,nm(1)*nm(2));
@@ -30,7 +31,7 @@ c4c1n = c4c1 / (nm(2)-1);
 
 % Calculate each point [x y x] of detector matrix in 3D space;
 counter = 1;
-detector_matrix = zeros(nm(1),nm(2),3); 
+cartesian_matrix = zeros(nm(1),nm(2),3); 
 for i = 0:(nm(1)-1)
     for j = 0:(nm(2)-1)
         
@@ -45,11 +46,26 @@ for i = 0:(nm(1)-1)
         xyz_unit = [x(counter) y(counter) z(counter)] / euclidean_norm;
         
         % Fill detector matrix with unit vector values
-        detector_matrix(i+1,j+1,1) = xyz_unit(1);
-        detector_matrix(i+1,j+1,2) = xyz_unit(2);
-        detector_matrix(i+1,j+1,3) = xyz_unit(3);
+        cartesian_matrix(i+1,j+1,1) = xyz_unit(1);
+        cartesian_matrix(i+1,j+1,2) = xyz_unit(2);
+        cartesian_matrix(i+1,j+1,3) = xyz_unit(3);
         
         counter = counter + 1;
+    end
+end
+
+% Convert cartesian [x y z] coordinates to spherical coordinates (theta,
+% phi, r)
+phi_matrix = zeros(nm(1),nm(2));
+theta_matrix = zeros(nm(1),nm(2));
+for i = 1:nm(1)
+    for j = 1:nm(2)
+        % azimuth(phi) = atan2(y,x)
+        phi_matrix(i,j) = atan2(detector_matrix_car(i,j,2),detector_matrix_car(i,j,1));
+        % elevation(theta) = atan2(z,sqrt(x.^2 + y.^2))
+        theta_matrix(i,j) = atan2(detector_matrix_car(i,j,3),sqrt(detector_matrix_car(i,j,1).^2 + detector_matrix_car(i,j,2).^2));
+        % r = sqrt(x.^2 + y.^2 + z.^2)
+        % Euclidean unit vectors (r=1)
     end
 end
 
@@ -64,9 +80,9 @@ if plot3D == 1
     hold on 
     
     % Plot detector as unit vectors
-    xu = detector_matrix(:,:,1);
-    yu = detector_matrix(:,:,2);
-    zu = detector_matrix(:,:,3);
+    xu = cartesian_matrix(:,:,1);
+    yu = cartesian_matrix(:,:,2);
+    zu = cartesian_matrix(:,:,3);
     scatter3((xu(:)'),(yu(:)'),(zu(:)'), 'Marker', '.','MarkerEdgeColor','r','MarkerFaceColor','r') 
     
     % Set labels
@@ -80,7 +96,7 @@ if plot3D == 1
     plot3([-1 1],[0 0],[0 0],'k','linewidth',2) 
     
     % Axis limits 
-    xlim([-2.5 2.5]) 
-    ylim([-2.5 2.5]) 
-    zlim([-2.5 2.5]) 
+    xlim([min([-2 min(x)]) max([2 max(x)])]) 
+    ylim([min([-2 min(y)]) max([2 max(y)])])  
+    zlim([min([-2 min(z)]) max([2 max(z)])]) 
 end
