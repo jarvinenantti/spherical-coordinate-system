@@ -61,9 +61,9 @@ theta_matrix = zeros(nm(1),nm(2));
 for i = 1:nm(1)
     for j = 1:nm(2)
         % azimuth(phi) = atan2(y,x)
-        phi_matrix(i,j) = atan2(detector_matrix_car(i,j,2),detector_matrix_car(i,j,1));
+        phi_matrix(i,j) = atan2(cartesian_matrix(i,j,2),cartesian_matrix(i,j,1));
         % elevation(theta) = atan2(z,sqrt(x.^2 + y.^2))
-        theta_matrix(i,j) = atan2(detector_matrix_car(i,j,3),sqrt(detector_matrix_car(i,j,1).^2 + detector_matrix_car(i,j,2).^2));
+        theta_matrix(i,j) = atan2(cartesian_matrix(i,j,3),sqrt(cartesian_matrix(i,j,1).^2 + cartesian_matrix(i,j,2).^2));
         % r = sqrt(x.^2 + y.^2 + z.^2)
         % Euclidean unit vectors (r=1)
     end
